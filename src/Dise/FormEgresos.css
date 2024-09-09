@@ -1,0 +1,60 @@
+/* Egresos.css */
+.sidebar {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-right: 1px solid #dee2e6;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .form-content {
+    padding: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-label {
+    display: block;
+    margin-bottom: .5rem;
+  }
+  
+  .form-select,
+  .form-input {
+    width: 100%;
+    padding: .375rem .75rem;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+  }
+  
+  .form-error {
+    color: red;
+    font-size: .875rem;
+  }
+  
+  .form-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: .5rem 1rem;
+    border-radius: .25rem;
+    cursor: pointer;
+  }
+  
+  .form-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .egreso-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .egreso-button {
+    margin-left: .5rem;
+  }
+  
