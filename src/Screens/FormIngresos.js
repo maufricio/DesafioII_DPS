@@ -80,7 +80,7 @@ export default function FormIngresos() {
       </Formik>
 
 
-      <Text style={styles.title}>Lista de Egresos</Text>
+      <Text style={styles.title}>Lista de Ingresos</Text>
       <FlatList
         data={ingresos}
         keyExtractor={(item, index) => index.toString()}

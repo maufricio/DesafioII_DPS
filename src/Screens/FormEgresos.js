@@ -107,7 +107,19 @@ export default function Egresos() {
               <Picker.Item label="Egresos Varios" value="Egresos Varios" />
             </Picker>
             <ErrorMessage name="tipoEgreso" component={Text} style={styles.error} />
-
+            <Field name="monto">
+                {({ field, form }) => (
+                  <TextInput
+                    {...field}
+                    keyboardType="numeric"
+                    style={styles.formInput}
+                    placeholder="Ingrese monto"
+                  />
+                )}
+            </Field>
+            <ErrorMessage name="monto">
+              {msg => <Text style={styles.formError}>{msg}</Text>}
+            </ErrorMessage>
 
             <Button
               title={editIndex !== null ? 'Actualizar' : 'Agregar'}
