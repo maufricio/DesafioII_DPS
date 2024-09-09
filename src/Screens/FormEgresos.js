@@ -51,7 +51,7 @@ export default function Egresos() {
         egresosArray[editIndex] = values;
         setEditIndex(null);
       } else {
-        egresosArray.push(values);
+        egresosArray.push(values); //Agrega los nuevos datos al array en la final posicion
       }
       
       await AsyncStorage.setItem('egresos', JSON.stringify(egresosArray));
@@ -107,11 +107,7 @@ export default function Egresos() {
               <Picker.Item label="Egresos Varios" value="Egresos Varios" />
             </Picker>
             <ErrorMessage name="tipoEgreso" component={Text} style={styles.error} />
-            <div className="form-group">
-                  <label className="form-label">Monto</label>
-                  <Field type="number" name="monto" className="form-input" />
-                  <ErrorMessage name="monto" component="div" className="form-error" />
-                </div>
+
 
             <Button
               title={editIndex !== null ? 'Actualizar' : 'Agregar'}
