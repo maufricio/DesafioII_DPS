@@ -20,24 +20,55 @@ const validationSchema = Yup.object().shape({
 
 export default function FormIngresos() {
   const [ingresos, setIngresos] = useState([]);
-  const [editIndex, setEditIndex] = useState(null);
-  const [selectedType, setSelectedType] = useState('');
+
+ // Función para almacenar los datos
+const storeData = async (newIngreso) => {
+  try {
+    const storedIngresos = await AsyncStorage.getItem('ingresos');
+    const ingresosArray = storedIngresos ? JSON.parse(storedIngresos) : [];
+    const updatedIngresos = [...ingresosArray, newIngreso];
+
+    // Guardar en AsyncStorage
+    await AsyncStorage.setItem('ingresos', JSON.stringify(updatedIngresos));
+
+    // Actualizar el estado local
+    setIngresos(updatedIngresos);
+  } catch (error) {
+    console.error('Error al almacenar datos:', error);
+  }
+};
+
+// Para mostrar los datos almacenados
+useEffect(() => {
+  const retrieveData = async () => {
+    try {
+      const storedIngresos = await AsyncStorage.getItem('ingresos');
+      if (storedIngresos) {
+        setIngresos(JSON.parse(storedIngresos));
+      }
+    } catch (error) {
+      console.error('Error al recuperar datos:', error);
+    }
+  };
+
+  retrieveData(); // Al montar el componente, obtener los datos
+}, []);
+
   return (
     <>
       <View style = {styles.container}>
         <Text style = {styles.title}>Formulario de Ingresos</Text>
         
-        <Formik
-        initialValues={{
-          fuenteIngreso: editIndex !== null ? ingresos[editIndex]?.fuenteIngreso : '',
-          monto: editIndex !== null ? ingresos[editIndex]?.monto : ''
-        }}
-        validationSchema={validationSchema}
-        onSubmit={(values, { resetForm }) => {
-          saveIngreso(values);
-          resetForm(); // Limpia el formulario después de enviar
-        }}
-      >
+            <Formik
+            initialValues={{
+              fuenteIngreso: '',
+              monto: ''
+            }}
+            validationSchema={validationSchema}
+            onSubmit={(values, { resetForm }) => {
+              storeData(values);
+            }}
+            >
         {({ handleSubmit, setFieldValue, values }) => (
           <View style={styles.form}>
             <Text>Tipo de Ingreso</Text>
@@ -71,32 +102,23 @@ export default function FormIngresos() {
       </ErrorMessage>
     </View>
 
-    <Button
-      title={editIndex !== null ? 'Actualizar' : 'Agregar'}
-      onPress={handleSubmit}
-    />
+      <Button onPress={handleSubmit} title="Submit" />
           </View>
         )}
       </Formik>
 
-
-      <Text style={styles.title}>Lista de Ingresos</Text>
-      <FlatList
-        data={ingresos}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.item}>
-            <Text>Tipo: {item.tipoEgreso}</Text>
-            <Text>Monto: ${item.monto}</Text>
-            <TouchableOpacity onPress={() => {}}>
-              <Text style={styles.editButton}>Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text style={styles.deleteButton}>Eliminar</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Mostrar los datos almacenados */}
+      <View style={styles.dataContainer}>
+        <Text style={styles.dataTitle}>Datos Ingresados</Text>
+        {ingresos ? (
+          <>
+            <Text>Tipo de Ingreso: {ingresos.tipoIngreso}</Text>
+            <Text>Monto: {ingresos.monto}</Text>
+          </>
+        ) : (
+          <Text>No se han ingresado datos aún</Text>
         )}
-      />
+      </View>
 
 
       </View>
