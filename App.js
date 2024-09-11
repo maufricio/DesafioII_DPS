@@ -9,7 +9,7 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync()
 
 const Tab = createBottomTabNavigator();
-export default function App() {
+const App = () => {
 
   useEffect(() => {
     setTimeout(async () => {
@@ -21,9 +21,11 @@ export default function App() {
   return (
     <NavigationContainer>
       <Tab.Navigator>
-        <Tab.Screen name="Datos" component={Datos} /> 
+        <Tab.Screen name="Datos" component={Datos}/> 
         <Tab.Screen name="Productos_Disponibles" component={Productos_Disponibles} />
       </Tab.Navigator>
     </NavigationContainer>
   );
 }
+
+export default App
