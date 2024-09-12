@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableWithoutFeedback, Keyboard} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
+import { v4 as uuidv4 } from 'uuid';
 
 // Esquema de validación con Yup
 const EgresoSchema = Yup.object().shape({
@@ -23,73 +24,87 @@ const EgresoSchema = Yup.object().shape({
     .required('El monto es obligatorio'),
 });
 
+
+
+
+
+  //Ocultar el teclado
+  const cerrarTeclado = () => {
+    Keyboard.dismiss();
+  }
+
 export default function Egresos() {
   const [egresos, setEgresos] = useState([]);
-  const [editIndex, setEditIndex] = useState(null);
-  const [selectedType, setSelectedType] = useState('');
 
-  useEffect(() => {
-    const fetchEgresos = async () => {
-      try {
-        const storedEgresos = await AsyncStorage.getItem('egresos');
-        const egresosArray = storedEgresos ? JSON.parse(storedEgresos) : [];
-        setEgresos(egresosArray);
-      } catch (error) {
-        console.error('Error recuperando los datos:', error);
-      }
-    };
-
-    fetchEgresos();
-  }, []);
-
-  const saveEgreso = async (values) => {
+  const storeData = async (newIngreso) => {
     try {
-      const existingEgresos = await AsyncStorage.getItem('egresos');
-      const egresosArray = existingEgresos ? JSON.parse(existingEgresos) : [];
-      
-      if (editIndex !== null) {
-        egresosArray[editIndex] = values;
-        setEditIndex(null);
-      } else {
-        egresosArray.push(values); //Agrega los nuevos datos al array en la final posicion
-      }
-      
-      await AsyncStorage.setItem('egresos', JSON.stringify(egresosArray));
-      setEgresos(egresosArray); // Actualiza el estado con los datos nuevos
-    } catch (error) {
-      console.error('Error guardando los datos:', error);
-    }
-  };
-
-  const handleEdit = (index) => {
-    setEditIndex(index);
-  };
-
-  const handleDelete = async (index) => {
-    try {
-      const updatedEgresos = egresos.filter((_, i) => i !== index);
+      newIngreso.id = uuidv4()
+      const storedEgresos = await AsyncStorage.getItem('egresos');
+      const egresosArray = storedEgresos ? JSON.parse(storedEgresos) : [];
+      const updatedEgresos = [...egresosArray, newIngreso];
+  
+      // Guardar en AsyncStorage
       await AsyncStorage.setItem('egresos', JSON.stringify(updatedEgresos));
+  
+      // Actualizar el estado local
       setEgresos(updatedEgresos);
     } catch (error) {
-      console.error('Error eliminando los datos:', error);
+      console.error('Error al almacenar datos:', error);
     }
   };
+  
+  const deleteData = async (id) => {
+    try {
+      const storedIngresos = await AsyncStorage.getItem('egresos');
+      const ingresosArray = storedIngresos ? JSON.parse(storedIngresos) : []; //Si existe algo dentro de storedIngresos, entonces parsear a JSON lo cual es un array, si no, entonces es un array vacío
+      const updatedIngresos = ingresosArray.filter((ingreso) => ingreso.id !== id);
+  
+      // Guardar en AsyncStorage
+      await AsyncStorage.setItem('egresos', JSON.stringify(updatedIngresos));
+  
+      // Actualizar el estado local
+      setEgresos(updatedIngresos);
+    } catch (error) {
+      console.error('Error al modificar datos:', error);
+    }
+  }
+  
+  useEffect(() => {
+    const retrieveData = async () => {
+      try {
+        const storedIngresos = await AsyncStorage.getItem('egresos');
+        if (storedIngresos)  {
+          setEgresos(JSON.parse(storedIngresos))
+          console.log("Egresos recuperados:", JSON.parse(storedIngresos));
+        }
+          
+      } catch (error) {
+        console.error('Error al recuperar datos:', error);
+      }
+    };
+    
+    retrieveData(); // Al montar el componente, obtener los datos
+  }, []);
+
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Formulario de Egresos</Text>
-      <Formik
-        initialValues={{
-          tipoEgreso: editIndex !== null ? egresos[editIndex]?.tipoEgreso : '',
-          monto: editIndex !== null ? egresos[editIndex]?.monto : ''
-        }}
-        validationSchema={EgresoSchema}
-        onSubmit={(values, { resetForm }) => {
-          saveEgreso(values);
-          resetForm(); // Limpia el formulario después de enviar
-        }}
-      >
-        {({ handleSubmit, setFieldValue, values }) => (
+<>
+     <TouchableWithoutFeedback onPress = {() => cerrarTeclado()}>
+      <View style = {styles.container}>
+        <Text style = {styles.title}>Formulario de Egresos</Text>
+        
+            <Formik
+            initialValues={{
+              tipoEgreso: '',
+              monto: ''
+            }}
+            validationSchema={EgresoSchema}
+            onSubmit={(values) => {
+              console.log(values); // Imprime los valores en formato JavaScript
+              storeData(values);
+            }}
+            >
+        {({ handleSubmit, handleChange, handleBlur, setFieldValue, values }) => (
           <View style={styles.form}>
             <Text>Tipo de Egreso</Text>
             <Picker
@@ -97,7 +112,7 @@ export default function Egresos() {
               onValueChange={(itemValue) => setFieldValue('tipoEgreso', itemValue)}
               style={styles.picker}
             >
-              <Picker.Item label="Selecciona un tipo de egreso" value="" />
+              <Picker.Item label="Selecciona un tipo de ingreso" value="" />
               <Picker.Item label="Alquiler/Hipoteca" value="Alquiler/Hipoteca" />
               <Picker.Item label="Canasta Básica" value="Canasta Básica" />
               <Picker.Item label="Financiamientos" value="Financiamientos" />
@@ -106,47 +121,55 @@ export default function Egresos() {
               <Picker.Item label="Salud y Seguro" value="Salud y Seguro" />
               <Picker.Item label="Egresos Varios" value="Egresos Varios" />
             </Picker>
-            <ErrorMessage name="tipoEgreso" component={Text} style={styles.error} />
-            <Field name="monto">
-                {({ field, form }) => (
-                  <TextInput
-                    {...field}
-                    keyboardType="numeric"
-                    style={styles.formInput}
-                    placeholder="Ingrese monto"
-                  />
-                )}
-            </Field>
-            <ErrorMessage name="monto">
-              {msg => <Text style={styles.formError}>{msg}</Text>}
-            </ErrorMessage>
+            <ErrorMessage name="tipoIngreso" component={Text} style={styles.error} />
+            <View style={styles.formGroup}>
+      <Text style={styles.formLabel}>Monto</Text>
+     
+      {/* Campo para el monto */}
+      <TextInput
+        name="monto"  // Agrega el atributo name
+        value={values.monto}
+        onChangeText={handleChange('monto')}  // Asegura que esté enlazado correctamente
+        onBlur={handleBlur('monto')}
+        keyboardType="numeric"
+        style={styles.input}
+        placeholder="Ingrese monto"
+      />
+      <ErrorMessage name="monto" component={Text} style={styles.error} />
+      <ErrorMessage name="tipoEgreso" component={Text} style={styles.error} />
+    </View>
 
-            <Button
-              title={editIndex !== null ? 'Actualizar' : 'Agregar'}
-              onPress={handleSubmit}
-            />
+      <Button onPress={handleSubmit} title="Ingresar" />
           </View>
         )}
       </Formik>
 
-      <Text style={styles.title}>Lista de Egresos</Text>
-      <FlatList
-        data={egresos}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.item}>
-            <Text>Tipo: {item.tipoEgreso}</Text>
-            <Text>Monto: ${item.monto}</Text>
-            <TouchableOpacity onPress={() => handleEdit(index)}>
-              <Text style={styles.editButton}>Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDelete(index)}>
-              <Text style={styles.deleteButton}>Eliminar</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Mostrar los datos almacenados */}
+      <View style={styles.dataContainer}>
+        
+        {egresos.length > 0 ? (
+          <FlatList 
+            style = {styles.dataIncome}
+            data = {egresos}
+            renderItem={({ item }) => (
+              <View style={styles.containerIngresos}>
+                <Text style={styles.text}>{item.tipoEgreso}</Text>
+                <Text style={styles.text}>${item.monto}</Text>
+                <Button style= {styles.deleteButton}title="Eliminar" onPress={() => deleteData(item.id)} />
+              </View>
+            )}
+            keyExtractor={(item) => item.id.toString()} // Assuming each item has a unique 'id' property
+            />
+            
+        ) : (
+          <Text>No se han ingresado datos aún</Text>
         )}
-      />
-    </View>
+      </View>
+
+
+      </View>
+      </TouchableWithoutFeedback>
+    </>
   );
 }
 
@@ -192,5 +215,11 @@ const styles = StyleSheet.create({
   deleteButton: {
     color: 'red',
     marginTop: 5,
+  },  containerIngresos:{
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
 });

@@ -7,8 +7,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync()
-
 const Tab = createBottomTabNavigator();
+
 const App = () => {
 
   useEffect(() => {
@@ -21,8 +21,16 @@ const App = () => {
   return (
     <NavigationContainer>
       <Tab.Navigator>
-        <Tab.Screen name="Datos" component={Datos}/> 
-        <Tab.Screen name="Productos_Disponibles" component={Productos_Disponibles} />
+        <Tab.Screen name="Datos" component={Datos} options={{ 
+          title : 'Datos',
+          headerShown: false,
+          
+          }} /> 
+        <Tab.Screen name="Productos_Disponibles" component={Productos_Disponibles} options={{ 
+          title : 'Productos Disponibles',
+          headerShown: false,
+          
+          }}/>
       </Tab.Navigator>
     </NavigationContainer>
   );

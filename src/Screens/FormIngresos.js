@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableWithoutFeedback, Keyboard} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-import shortid from 'react-id-generator';
+import { v4 as uuidv4 } from 'uuid';
+import 'react-native-get-random-values';
+
 
 const validationSchema = Yup.object().shape({
   fuenteIngreso: Yup.string()
@@ -12,18 +14,35 @@ const validationSchema = Yup.object().shape({
       ['Salario', 'Negocio Propio', 'Pensiones', 'Remesas', 'Ingresos Varios'],
       'Por favor selecciona una opción válida.'
     )
-    .required('Este campo es obligatorio'),
+    .required('Por favor selecciona una opción válida de los ingresos.'),
     monto: Yup.number()
       .required('El monto es obligatorio')
       .min(0, 'El monto debe ser mayor o igual a 0')
 });
+  //Ocultar el teclado
+  const cerrarTeclado = () => {
+    Keyboard.dismiss();
+  }
+const clearStorage = async () => {
+  try {
+    await AsyncStorage.clear();
+    console.log("AsyncStorage borrado");
+  } catch (error) {
+    console.error('Error al limpiar datos:', error);
+  }
+}
+
+
 
 export default function FormIngresos() {
   const [ingresos, setIngresos] = useState([]);
 
+  //console.log(cita);
+
  // Función para almacenar los datos
 const storeData = async (newIngreso) => {
   try {
+    newIngreso.id = uuidv4()
     const storedIngresos = await AsyncStorage.getItem('ingresos');
     const ingresosArray = storedIngresos ? JSON.parse(storedIngresos) : [];
     const updatedIngresos = [...ingresosArray, newIngreso];
@@ -38,24 +57,45 @@ const storeData = async (newIngreso) => {
   }
 };
 
+const deleteData = async (id) => {
+  try {
+    const storedIngresos = await AsyncStorage.getItem('ingresos');
+    const ingresosArray = storedIngresos ? JSON.parse(storedIngresos) : []; //Si existe algo dentro de storedIngresos, entonces parsear a JSON lo cual es un array, si no, entonces es un array vacío
+    const updatedIngresos = ingresosArray.filter((ingreso) => ingreso.id !== id);
+
+    // Guardar en AsyncStorage
+    await AsyncStorage.setItem('ingresos', JSON.stringify(updatedIngresos));
+
+    // Actualizar el estado local
+    setIngresos(updatedIngresos);
+  } catch (error) {
+    console.error('Error al modificar datos:', error);
+  }
+}
+
 // Para mostrar los datos almacenados
 useEffect(() => {
   const retrieveData = async () => {
     try {
       const storedIngresos = await AsyncStorage.getItem('ingresos');
-      if (storedIngresos) {
-        setIngresos(JSON.parse(storedIngresos));
+      if (storedIngresos)  {
+        setIngresos(JSON.parse(storedIngresos))
+        console.log("Ingresos recuperados:", JSON.parse(storedIngresos));
       }
+        
     } catch (error) {
       console.error('Error al recuperar datos:', error);
     }
   };
-
+  
   retrieveData(); // Al montar el componente, obtener los datos
 }, []);
 
+
+
   return (
     <>
+     <TouchableWithoutFeedback onPress = {() => cerrarTeclado()}>
       <View style = {styles.container}>
         <Text style = {styles.title}>Formulario de Ingresos</Text>
         
@@ -65,19 +105,20 @@ useEffect(() => {
               monto: ''
             }}
             validationSchema={validationSchema}
-            onSubmit={(values, { resetForm }) => {
+            onSubmit={(values) => {
+              console.log(values); // Imprime los valores en formato JavaScript
               storeData(values);
             }}
             >
-        {({ handleSubmit, setFieldValue, values }) => (
+        {({ handleSubmit, handleChange, handleBlur, setFieldValue, values }) => (
           <View style={styles.form}>
             <Text>Tipo de Ingreso</Text>
             <Picker
-              selectedValue={values.tipoIngreso}
-              onValueChange={(itemValue) => setFieldValue('tipoIngreso', itemValue)}
+              selectedValue={values.fuenteIngreso}
+              onValueChange={(itemValue) => setFieldValue('fuenteIngreso', itemValue)}
               style={styles.picker}
             >
-              <Picker.Item label="Selecciona un tipo de egreso" value="" />
+              <Picker.Item label="Selecciona un tipo de ingreso" value="" />
               <Picker.Item label="Salario" value="Salario" />
               <Picker.Item label="Negocio Propio" value="Negocio Propio" />
               <Picker.Item label="Pensiones" value="Pensiones" />
@@ -87,34 +128,43 @@ useEffect(() => {
             <ErrorMessage name="tipoIngreso" component={Text} style={styles.error} />
             <View style={styles.formGroup}>
       <Text style={styles.formLabel}>Monto</Text>
-      <Field name="monto">
-        {({ field, form }) => (
-          <TextInput
-            {...field}
-            keyboardType="numeric"
-            style={styles.formInput}
-            placeholder="Ingrese monto"
-          />
-        )}
-      </Field>
-      <ErrorMessage name="monto">
-        {msg => <Text style={styles.formError}>{msg}</Text>}
-      </ErrorMessage>
+     
+      {/* Campo para el monto */}
+      <TextInput
+        name="monto"  // Agrega el atributo name
+        value={values.monto}
+        onChangeText={handleChange('monto')}  // Asegura que esté enlazado correctamente
+        onBlur={handleBlur('monto')}
+        keyboardType="numeric"
+        style={styles.input}
+        placeholder="Ingrese monto"
+      />
+      <ErrorMessage name="monto" component={Text} style={styles.error} />
+      <ErrorMessage name="fuenteIngreso" component={Text} style={styles.error} />
     </View>
 
-      <Button onPress={handleSubmit} title="Submit" />
+      <Button onPress={handleSubmit} title="Ingresar" />
           </View>
         )}
       </Formik>
 
       {/* Mostrar los datos almacenados */}
       <View style={styles.dataContainer}>
-        <Text style={styles.dataTitle}>Datos Ingresados</Text>
-        {ingresos ? (
-          <>
-            <Text>Tipo de Ingreso: {ingresos.tipoIngreso}</Text>
-            <Text>Monto: {ingresos.monto}</Text>
-          </>
+        
+        {ingresos.length > 0 ? (
+          <FlatList 
+            style = {styles.dataIncome}
+            data = {ingresos}
+            renderItem={({ item }) => (
+              <View style={styles.containerIngresos}>
+                <Text style={styles.text}>{item.fuenteIngreso}</Text>
+                <Text style={styles.text}>${item.monto}</Text>
+                <Button style= {styles.deleteButton}title="Eliminar" onPress={() => deleteData(item.id)} />
+              </View>
+            )}
+            keyExtractor={(item) => item.id.toString()} // Assuming each item has a unique 'id' property
+            />
+            
         ) : (
           <Text>No se han ingresado datos aún</Text>
         )}
@@ -122,6 +172,7 @@ useEffect(() => {
 
 
       </View>
+      </TouchableWithoutFeedback>
     </>
   );
 }
@@ -129,6 +180,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    
   },
   title: {
     fontSize: 20,
@@ -160,12 +212,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
-  editButton: {
-    color: 'blue',
-    marginTop: 10,
-  },
-  deleteButton: {
-    color: 'red',
-    marginTop: 5,
+
+  containerIngresos:{
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
 });
