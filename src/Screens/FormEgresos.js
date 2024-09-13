@@ -68,7 +68,7 @@ export default function Egresos({ update }) {
       setEgresos(updatedIngresos);
       update(() => retrieveData());
 
-      
+
     } catch (error) {
       console.error('Error al modificar datos:', error);
     }
@@ -106,10 +106,10 @@ export default function Egresos({ update }) {
               monto: ''
             }}
             validationSchema={EgresoSchema}
-            onSubmit={(values) => {
+            onSubmit={(values, {resetForm}) => {
               console.log(values); // Imprime los valores en formato JavaScript
               storeData(values);
-
+              resetForm();
             }}
           >
             {({ handleSubmit, handleChange, handleBlur, setFieldValue, values }) => (

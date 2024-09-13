@@ -44,12 +44,15 @@ export default function Productos() {
       }
     } else if (ingresos >= 700 && ingresos < 1200) {
       if (disponibilidad < 20) {
+        console.log(disponibilidad);
         setCalificacion('Riesgo Alto');
         setProductos(['Apertura de cuenta']);
       } else if (disponibilidad >= 20 && disponibilidad <= 40) {
+        console.log(disponibilidad);
         setCalificacion('Riesgo Suficiente');
         setProductos(['Apertura de cuenta', 'Tarjeta de Crédito Clásica', 'Crédito personal hasta $8,000.00']);
       } else {
+        console.log(disponibilidad);
         setCalificacion('Riesgo Bueno');
         setProductos(['Apertura de cuenta', 'Tarjeta de Crédito Clásica', 'Tarjeta de Crédito Oro', 'Crédito personal hasta $8,000.00']);
       }

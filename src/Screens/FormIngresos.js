@@ -110,9 +110,10 @@ export default function FormIngresos({ update }) {
               monto: ''
             }}
             validationSchema={validationSchema}
-            onSubmit={(values) => {
+            onSubmit={(values, {resetForm}) => {
               console.log(values); // Imprime los valores en formato JavaScript
               storeData(values);
+              resetForm();
             }}
           >
             {({ handleSubmit, handleChange, handleBlur, setFieldValue, values }) => (

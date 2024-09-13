@@ -67,12 +67,19 @@ const Grafica = ({ onDataChange }) => {
         { ...data[1], population: totalEgresos }
       ]);
 
-      const total = totalIngresos + totalEgresos;
-      setData2({
-        labels: [""],
-        data: total > 0 ? [totalIngresos / total] : [0]
-      });
+      const disponibilidad = ((totalIngresos - totalEgresos) / totalIngresos);
 
+      if (disponibilidad > 0) {
+        setData2({
+          labels: [""],
+          data: [disponibilidad]
+        });
+      }else{
+        setData2({
+          labels: [""],
+          data: [0]
+        });
+      }
     } catch (error) {
       console.error('Error al recuperar datos:', error);
     }
@@ -124,17 +131,18 @@ const Grafica = ({ onDataChange }) => {
             ))}
           </View>
           <View style={styles.header2}>
-            <Icon name="done-all" size={30} color="black" style={styles.icon} />
-            <Text style={styles.title}>¡Tu porcentaje de ingresos!</Text>
+            <Icon name="local-atm" size={30} color="black" style={styles.icon} />
+            <Text style={styles.title}>¡Tu disponibilidad de ingresos!</Text>
           </View>
           <ProgressChart
             data={data2}
             width={screenWidth}
             height={220}
-            strokeWidth={15}
+            strokeWidth={20}
             radius={80}
             chartConfig={configchart2}
             hideLegend={false}
+            
           />
         </View>
       ) : (
