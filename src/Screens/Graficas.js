@@ -1,93 +1,148 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, FlatList, ScrollView, Dimensions } from 'react-native';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-  ContributionGraph,
-  StackedBarChart
-} from "react-native-chart-kit";
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { PieChart, ProgressChart } from "react-native-chart-kit";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const screenWidth = Dimensions.get("window").width;
-const data = [
-  {
-    name: "Ingresos",
-    population: 1000,
-    color: "#FF7B7B",
-    legendFontColor: "#000000",
-    legendFontSize: 20
-  }, {
 
-    name: "Egresos",
-    population: 600,
-    color: "#9BFF7B",
-    legendFontColor: "#000000",
-    legendFontSize: 20
+const Grafica = ({ onDataChange }) => {
+  const [data, setData] = useState([
+    {
+      name: "Ingresos",
+      population: 0,
+      color: "#FF7B7B",
+      legendFontColor: "#000000",
+      legendFontSize: 15
+    },
+    {
+      name: "Egresos",
+      population: 0,
+      color: "#9BFF7B",
+      legendFontColor: "#000000",
+      legendFontSize: 15
+    }
+  ]);
 
-  }
-]
+  const [data2, setData2] = useState({
+    labels: [""],
+    data: [0]
+  });
 
-const data2 = {
-  labels: [""], // optional
-  data: [0.7]
-};
+  const configchart = {
+    backgroundGradientFrom: "#632E2E",
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientTo: "#08130D",
+    backgroundGradientToOpacity: 0.5,
+    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+    strokeWidth: 2,
+    barPercentage: 0.5,
+    useShadowColorFromDataset: false
+  };
 
-const configchart = {
-  backgroundGradientFrom: "#632E2E",
-  backgroundGradientFromOpacity: 0,
-  backgroundGradientTo: "#08130D",
-  backgroundGradientToOpacity: 0.5,
-  color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-  strokeWidth: 2, // optional, default 3
-  barPercentage: 0.5,
-  useShadowColorFromDataset: false // optional
-}
+  const configchart2 = {
+    backgroundGradientFrom: "#C1C1C1",
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientTo: "#FFFFFF",
+    backgroundGradientToOpacity: 0.5,
+    color: (opacity = 1) => `rgba(37, 63, 255, ${opacity})`,
+    strokeWidth: 15,
+    barPercentage: 0.5,
+    useShadowColorFromDataset: false
+  };
 
-const configchart2 = {
-  backgroundGradientFrom: "#C1C1C1",
-  backgroundGradientFromOpacity: 0,
-  backgroundGradientTo: "#FFFFFF",
-  backgroundGradientToOpacity: 0.5,
-  color: (opacity = 1) => `rgba(37, 63, 255, ${opacity})`,
-  strokeWidth: 2, // optional, default 3
-  barPercentage: 0.5,
-  useShadowColorFromDataset: false // optional
-}
+  const retrieveData = async () => {
+    try {
+      const storedIngresos = await AsyncStorage.getItem('ingresos');
+      const storedEgresos = await AsyncStorage.getItem('egresos');
 
+      const ingresosArray = storedIngresos ? JSON.parse(storedIngresos) : [];
+      const egresosArray = storedEgresos ? JSON.parse(storedEgresos) : [];
 
-const Grafica = () => {
+      const totalIngresos = ingresosArray.reduce((sum, item) => sum + parseFloat(item.monto), 0);
+      const totalEgresos = egresosArray.reduce((sum, item) => sum + parseFloat(item.monto), 0);
+
+      setData([
+        { ...data[0], population: totalIngresos },
+        { ...data[1], population: totalEgresos }
+      ]);
+
+      const total = totalIngresos + totalEgresos;
+      setData2({
+        labels: [""],
+        data: total > 0 ? [totalIngresos / total] : [0]
+      });
+
+    } catch (error) {
+      console.error('Error al recuperar datos:', error);
+    }
+  };
+
+  useEffect(() => {
+    retrieveData();
+  }, []);
+
+  // Llama a updateGraphData cuando se recibe la prop onDataChange
+  useEffect(() => {
+    if (onDataChange) {
+      const updateData = async () => {
+        await retrieveData(); // Actualiza los datos
+        console.log("grafica actualizada");
+      };
+
+      updateData();
+    }
+  }, [onDataChange]);
+
+  const hasData = data.some(item => item.population > 0);
+
   return (
     <>
-      <View style={styles.container}>
-        <Text style={styles.title}>Grafica Ingresos vs Egresos</Text>
-        <PieChart
-          data={data}
-          width={screenWidth}
-          height={220}
-          chartConfig={configchart}
-          accessor={"population"}
-          backgroundColor={"transparent"}
-          paddingLeft={"0"}
-          center={[10, 10]}
-          absolute
-        />
-      </View>
-      <View style={styles.container}>
-        <Text style={styles.title}>¡Tu porcentaje de ingresos!</Text>
-        <ProgressChart
-          data={data2}
-          width={screenWidth}
-          height={220}
-          strokeWidth={15}
-          radius={80}
-          chartConfig={configchart2}
-          hideLegend={false}
-        />
-      </View>
+      {hasData ? (
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Icon name="assessment" size={30} color="black" style={styles.icon} />
+            <Text style={styles.title}>Gráfica Ingresos vs Egresos</Text>
+          </View>
+          <PieChart
+            data={data}
+            width={screenWidth}
+            height={220}
+            chartConfig={configchart}
+            accessor={"population"}
+            backgroundColor={"transparent"}
+            paddingLeft={"-10"}
+            center={[5, 5]}
+            absolute
+          />
+          <View style={styles.legend}>
+            {data.map((item) => (
+              <View key={item.name} style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                <Text>{item.name}: ${item.population.toFixed(2)}</Text>
+              </View>
+            ))}
+          </View>
+          <View style={styles.header2}>
+            <Icon name="done-all" size={30} color="black" style={styles.icon} />
+            <Text style={styles.title}>¡Tu porcentaje de ingresos!</Text>
+          </View>
+          <ProgressChart
+            data={data2}
+            width={screenWidth}
+            height={220}
+            strokeWidth={15}
+            radius={80}
+            chartConfig={configchart2}
+            hideLegend={false}
+          />
+        </View>
+      ) : (
+        <Text>No hay datos que mostrar...</Text>
+      )}
     </>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -98,7 +153,37 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginVertical: 10,
     textAlign: "center"
+  },
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  legendColor: {
+    width: 20,
+    height: 20,
+    marginRight: 10
+  },
+  icon: {
+    marginRight: 8
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16
+  },
+  header2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    marginTop: 30
   }
-})
+});
 
-export default Grafica
+export default Grafica;

@@ -5,6 +5,7 @@ import Datos from './src/Screens/Datos';
 import Productos_Disponibles from './src/Screens/Productos'; 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as SplashScreen from 'expo-splash-screen';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 SplashScreen.preventAutoHideAsync()
 const Tab = createBottomTabNavigator();
@@ -24,12 +25,16 @@ const App = () => {
         <Tab.Screen name="Datos" component={Datos} options={{ 
           title : 'Datos',
           headerShown: false,
-          
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="folder" size={size} color={color} />
+          )
           }} /> 
         <Tab.Screen name="Productos_Disponibles" component={Productos_Disponibles} options={{ 
           title : 'Productos Disponibles',
           headerShown: false,
-          
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="payment" size={size} color={color} />
+          )
           }}/>
       </Tab.Navigator>
     </NavigationContainer>
