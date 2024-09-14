@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "desafio2",
-    "slug": "desafio2",
+    "name": "CrediMoney",
+    "slug": "CrediMoney",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icono.jpeg",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/Splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,7 +16,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icono.jpeg",
         "backgroundColor": "#ffffff"
       }
     },

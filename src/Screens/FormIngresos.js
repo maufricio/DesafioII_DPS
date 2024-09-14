@@ -18,7 +18,7 @@ const validationSchema = Yup.object().shape({
     .required('Por favor selecciona una opción válida de los ingresos.'),
   monto: Yup.number()
     .required('El monto es obligatorio')
-    .min(0, 'El monto debe ser mayor o igual a 0')
+    .min(0.01, 'El monto debe ser mayor a 0')
 });
 //Ocultar el teclado
 const cerrarTeclado = () => {

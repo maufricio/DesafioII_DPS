@@ -22,12 +22,9 @@ const EgresoSchema = Yup.object().shape({
     .required('El tipo de egreso es obligatorio'),
   monto: Yup.number()
     .positive('El monto debe ser un número positivo')
-    .required('El monto es obligatorio'),
+    .required('El monto es obligatorio')
+    .min(0.01, 'El monto debe ser mayor a 0')
 });
-
-
-
-
 
 //Ocultar el teclado
 const cerrarTeclado = () => {
