@@ -148,6 +148,29 @@ exports.addusuario = async (req, res) => {
     }
 };
 
+
+exports.modifyUsuario = async(req, res) => {
+    const { id } = req.params;
+    const { status } = req.body; // Espera recibir el nuevo estado en el cuerpo de la solicitud
+
+    try {
+        // Actualiza el estado del usuario en la base de datos
+        const usuarioActualizado = await datausuario.findByIdAndUpdate(
+            id,
+            { Status: status }, // Cambia el campo `Status` con el valor recibido
+            { new: true } // Devuelve el documento actualizado
+        );
+
+        if (!usuarioActualizado) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        res.status(200).json(usuarioActualizado); // Devuelve el documento actualizado
+    } catch (error) {
+        res.status(500).json({ message: 'Error al actualizar el estado', error });
+    }
+}
+
 //CRUD para la solicitud
 
 exports.listdetalle = async (req, res) => {
