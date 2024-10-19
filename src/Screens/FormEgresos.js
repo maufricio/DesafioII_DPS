@@ -22,12 +22,9 @@ const EgresoSchema = Yup.object().shape({
     .required('El tipo de egreso es obligatorio'),
   monto: Yup.number()
     .positive('El monto debe ser un número positivo')
-    .required('El monto es obligatorio'),
+    .required('El monto es obligatorio')
+    .min(0.01, 'El monto debe ser mayor a 0')
 });
-
-
-
-
 
 //Ocultar el teclado
 const cerrarTeclado = () => {
@@ -68,7 +65,7 @@ export default function Egresos({ update }) {
       setEgresos(updatedIngresos);
       update(() => retrieveData());
 
-      
+
     } catch (error) {
       console.error('Error al modificar datos:', error);
     }
@@ -106,10 +103,10 @@ export default function Egresos({ update }) {
               monto: ''
             }}
             validationSchema={EgresoSchema}
-            onSubmit={(values) => {
+            onSubmit={(values, {resetForm}) => {
               console.log(values); // Imprime los valores en formato JavaScript
               storeData(values);
-
+              resetForm();
             }}
           >
             {({ handleSubmit, handleChange, handleBlur, setFieldValue, values }) => (
