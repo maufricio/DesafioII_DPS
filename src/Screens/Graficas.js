@@ -1,44 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { PieChart, ProgressChart } from "react-native-chart-kit";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ProgressChart } from "react-native-chart-kit";
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Data from "../Conection/Data";
 
 const screenWidth = Dimensions.get("window").width;
+const url_data_ingreso = Data + '/listingreso';
+const url_data_egreso = Data + '/listegreso';
 
-const Grafica = ({ onDataChange }) => {
-  const [data, setData] = useState([
-    {
-      name: "Ingresos",
-      population: 0,
-      color: "#FF7B7B",
-      legendFontColor: "#000000",
-      legendFontSize: 15
-    },
-    {
-      name: "Egresos",
-      population: 0,
-      color: "#9BFF7B",
-      legendFontColor: "#000000",
-      legendFontSize: 15
-    }
-  ]);
-
+const Grafica = () => {
   const [data2, setData2] = useState({
     labels: [""],
     data: [0]
   });
 
-  const configchart = {
-    backgroundGradientFrom: "#632E2E",
-    backgroundGradientFromOpacity: 0,
-    backgroundGradientTo: "#08130D",
-    backgroundGradientToOpacity: 0.5,
-    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    strokeWidth: 2,
-    barPercentage: 0.5,
-    useShadowColorFromDataset: false
-  };
+  const [hasData, setHasData] = useState(false);
+  const [refresh, setRefresh] = useState(false);
 
   const configchart2 = {
     backgroundGradientFrom: "#C1C1C1",
@@ -51,88 +28,60 @@ const Grafica = ({ onDataChange }) => {
     useShadowColorFromDataset: false
   };
 
-  const retrieveData = async () => {
+  const fetchData = async () => {
     try {
-      const storedIngresos = await AsyncStorage.getItem('ingresos');
-      const storedEgresos = await AsyncStorage.getItem('egresos');
+      const ingresosResponse = await fetch(`${url_data_ingreso}?timestamp=${new Date().getTime()}`);
+      const egresosResponse = await fetch(`${url_data_egreso}?timestamp=${new Date().getTime()}`);
 
-      const ingresosArray = storedIngresos ? JSON.parse(storedIngresos) : [];
-      const egresosArray = storedEgresos ? JSON.parse(storedEgresos) : [];
+      const ingresosArray = await ingresosResponse.json();
+      const egresosArray = await egresosResponse.json();
 
-      const totalIngresos = ingresosArray.reduce((sum, item) => sum + parseFloat(item.monto), 0);
-      const totalEgresos = egresosArray.reduce((sum, item) => sum + parseFloat(item.monto), 0);
+      console.log("Ingresos:", ingresosArray);
+      console.log("Egresos:", egresosArray);
 
-      setData([
-        { ...data[0], population: totalIngresos },
-        { ...data[1], population: totalEgresos }
-      ]);
+      const totalIngresos = ingresosArray.reduce((sum, item) => sum + parseFloat(item.Monto), 0);
+      const totalEgresos = egresosArray.reduce((sum, item) => sum + parseFloat(item.Monto), 0);
 
-      const disponibilidad = ((totalIngresos - totalEgresos) / totalIngresos);
+      const disponibilidad = totalIngresos > 0 ? (totalIngresos - totalEgresos) / totalIngresos : 0;
 
-      if (disponibilidad > 0) {
-        setData2({
-          labels: [""],
-          data: [disponibilidad]
-        });
-      }else{
-        setData2({
-          labels: [""],
-          data: [0]
-        });
-      }
+      setData2({
+        labels: [""],
+        data: [disponibilidad > 0 ? disponibilidad : 0]
+      });
+
+      setHasData(disponibilidad > 0);
+
     } catch (error) {
       console.error('Error al recuperar datos:', error);
     }
   };
 
   useEffect(() => {
-    retrieveData();
+    fetchData();
+  }, [refresh]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchData(); // Llama a fetchData cada cierto tiempo para actualizar datos
+    }, 500000); // Por ejemplo, cada 5 segundos
+
+    return () => clearInterval(interval); // Limpia el intervalo al desmontar
   }, []);
 
-  // Llama a updateGraphData cuando se recibe la prop onDataChange
-  useEffect(() => {
-    if (onDataChange) {
-      const updateData = async () => {
-        await retrieveData(); // Actualiza los datos
-        console.log("grafica actualizada");
-      };
+  const handleRefresh = () => {
+    setRefresh(!refresh);
+  };
 
-      updateData();
-    }
-  }, [onDataChange]);
-
-  const hasData = data.some(item => item.population > 0);
+  console.log("Datos en data2:", data2);
 
   return (
     <>
       {hasData ? (
         <View style={styles.container}>
-          <View style={styles.header}>
-            <Icon name="assessment" size={30} color="black" style={styles.icon} />
-            <Text style={styles.title}>Gráfica Ingresos vs Egresos</Text>
-          </View>
-          <PieChart
-            data={data}
-            width={screenWidth}
-            height={220}
-            chartConfig={configchart}
-            accessor={"population"}
-            backgroundColor={"transparent"}
-            paddingLeft={"-10"}
-            center={[5, 5]}
-            absolute
-          />
-          <View style={styles.legend}>
-            {data.map((item) => (
-              <View key={item.name} style={styles.legendItem}>
-                <View style={[styles.legendColor, { backgroundColor: item.color }]} />
-                <Text>{item.name}: ${item.population.toFixed(2)}</Text>
-              </View>
-            ))}
-          </View>
           <View style={styles.header2}>
             <Icon name="local-atm" size={30} color="black" style={styles.icon} />
             <Text style={styles.title}>¡Tu disponibilidad de ingresos!</Text>
+            <Icon name="refresh" size={30} color="black" style={styles.icon} onPress={handleRefresh} />
           </View>
           <ProgressChart
             data={data2}
@@ -142,7 +91,6 @@ const Grafica = ({ onDataChange }) => {
             radius={80}
             chartConfig={configchart2}
             hideLegend={false}
-            
           />
         </View>
       ) : (
@@ -162,35 +110,15 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     textAlign: "center"
   },
-  legend: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 20
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  legendColor: {
-    width: 20,
-    height: 20,
-    marginRight: 10
-  },
   icon: {
     marginRight: 8
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16
   },
   header2: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    marginTop: 30
+    marginTop: 0
   }
 });
 

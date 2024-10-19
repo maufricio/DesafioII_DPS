@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import Data from '../Conection/Data'
+import axios from 'axios';
+
+const url_ingreso = Data + '/listingreso'
+const url_egreso = Data + '/listegreso'
 
 export default function Productos() {
   const [ingresos, setIngresos] = useState(0);
   const [egresos, setEgresos] = useState(0);
   const [calificacion, setCalificacion] = useState('');
   const [productos, setProductos] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
 
-  // Simular obtener datos desde la API
   const retrieveData = async () => {
-    // Aquí iría el fetch de Axios para traer los datos de la API en vez de AsyncStorage
-    const totalIngresos = 100; // Simulación de ingresos
-    const totalEgresos = 200;   // Simulación de egresos
-    const disponibilidad = ((totalIngresos - totalEgresos) / totalIngresos) * 100;
+    try {
+      const responseIngresos = await axios.get(url_ingreso);
+      const responseEgresos = await axios.get(url_egreso);
 
-    setIngresos(totalIngresos);
-    setEgresos(totalEgresos);
-    evaluarRango(totalIngresos, disponibilidad);
+      const totalIngresos = responseIngresos.data.reduce((acc, item) => acc + item.Monto, 0);
+      const totalEgresos = responseEgresos.data.reduce((acc, item) => acc + item.Monto, 0);
+      const disponibilidad = ((totalIngresos - totalEgresos) / totalIngresos) * 100;
+
+      setIngresos(totalIngresos);
+      setEgresos(totalEgresos);
+      evaluarRango(totalIngresos, disponibilidad);
+    } catch (error) {
+      console.error('Error al recuperar datos:', error);
+    }
   };
 
   const evaluarRango = (ingresos, disponibilidad) => {
@@ -73,79 +84,88 @@ export default function Productos() {
     retrieveData();
   }, []);
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    retrieveData().then(() => setRefreshing(false));
+  };
+
   // Función que asigna colores a cada tarjeta
   const getCardStyle = (producto) => {
-  switch (producto) {
-    case 'Tarjeta de Crédito Oro':
-      return { ...styles.tarjetaOro, color: 'black' };  // Texto negro en tarjeta dorada
-    case 'Tarjeta de Crédito Platinum':
-      return styles.tarjetaPlatinum;
-    case 'Tarjeta de Crédito Clásica':
-      return styles.tarjetaClasica;
-    case 'Apertura de cuenta':
-      return { ...styles.tarjetaBlanca, color: 'black' };  // Texto negro en tarjeta blanca
-    default:
-      return styles.tarjetaDefault;
-  }
-};
+    switch (producto) {
+      case 'Tarjeta de Crédito Oro':
+        return { ...styles.tarjetaOro, color: 'black' };  // Texto negro en tarjeta dorada
+      case 'Tarjeta de Crédito Platinum':
+        return styles.tarjetaPlatinum;
+      case 'Tarjeta de Crédito Clásica':
+        return styles.tarjetaClasica;
+      case 'Apertura de cuenta':
+        return { ...styles.tarjetaBlanca, color: 'black' };  // Texto negro en tarjeta blanca
+      default:
+        return styles.tarjetaDefault;
+    }
+  };
 
-const getTextColor = (producto) => {
-  switch (producto) {
-    case 'Tarjeta de Crédito Oro':
-      return 'black'; // Texto negro para tarjeta dorada
-    case 'Tarjeta de Crédito Platinum':
-      return 'white'; // Texto blanco para tarjeta plateada
-    case 'Tarjeta de Crédito Clásica':
-      return 'white'; // Texto blanco para tarjeta azul
-    case 'Apertura de cuenta':
-      return 'black'; // Texto negro para tarjeta blanca
-    default:
-      return 'white'; // Texto blanco por defecto
-  }
-};
+  const getTextColor = (producto) => {
+    switch (producto) {
+      case 'Tarjeta de Crédito Oro':
+        return 'black'; // Texto negro para tarjeta dorada
+      case 'Tarjeta de Crédito Platinum':
+        return 'white'; // Texto blanco para tarjeta plateada
+      case 'Tarjeta de Crédito Clásica':
+        return 'white'; // Texto blanco para tarjeta azul
+      case 'Apertura de cuenta':
+        return 'black'; // Texto negro para tarjeta blanca
+      default:
+        return 'white'; // Texto blanco por defecto
+    }
+  };
 
-return (
-  <>
-  
-  {productos ? (
+  return (
+    <>
 
-<View style={styles.container}>
-<Text>Total Ingresos: {ingresos}</Text>
-<Text>Total Egresos: {egresos}</Text>
-<Text>Calificación de Riesgo: {calificacion}</Text>
-<Text>Productos sugeridos:</Text>
+      {productos.length > 0 ? (
 
-<ScrollView>
-    {productos.map((producto, index) => (
-      <TouchableOpacity
-        key={index}
-        style={[styles.card, getCardStyle(producto)]}
-        onPress={() => navigation.navigate('Tarjeta', { producto })}
-      >
-        {/* Aplica el color del texto dinámicamente */}
-        <Text style={[styles.productoText, { color: getTextColor(producto) }]}>
-          {producto}
-        </Text>
-        <Text style={[styles.tarjetaNumero, { color: getTextColor(producto) }]}>
-          **** **** **** 1234
-        </Text>
-        <Text style={[styles.tarjetaFecha, { color: getTextColor(producto) }]}>
-          Vence: 12/25
-        </Text>
-      </TouchableOpacity>
-    ))}
-    </ScrollView>
-    </View>
-  ): (
-    <View>
-      <Text>No tienes productos por el momento</Text>
-    </View>
-  )}
-  
- 
+        <View style={styles.container}>
+          <Text>Total Ingresos: {ingresos}</Text>
+          <Text>Total Egresos: {egresos}</Text>
+          <Text>Calificación de Riesgo: {calificacion}</Text>
+          <Text>Productos sugeridos:</Text>
 
-  </>
-);
+          <ScrollView
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
+            {productos.map((producto, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.card, getCardStyle(producto)]}
+                onPress={() => navigation.navigate('Tarjeta', { producto })}
+              >
+                {/* Aplica el color del texto dinámicamente */}
+                <Text style={[styles.productoText, { color: getTextColor(producto) }]}>
+                  {producto}
+                </Text>
+                <Text style={[styles.tarjetaNumero, { color: getTextColor(producto) }]}>
+                  **** **** **** 1234
+                </Text>
+                <Text style={[styles.tarjetaFecha, { color: getTextColor(producto) }]}>
+                  Vence: 12/25
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      ) : (
+        <View>
+          <Text>No tienes productos por el momento</Text>
+        </View>
+      )}
+
+
+
+    </>
+  );
 
 }
 const styles = StyleSheet.create({
@@ -202,17 +222,17 @@ const styles = StyleSheet.create({
   },
 });
 
-    /*  const retrieveData = async () => {
-    try {
-      const response = await axios.get('https://tubasededatos/api/obtenerDatos');
-      const { ingresos, egresos } = response.data;
-      setIngresos(ingresos);
-      setEgresos(egresos);
+/*  const retrieveData = async () => {
+try {
+  const response = await axios.get('https://tubasededatos/api/obtenerDatos');
+  const { ingresos, egresos } = response.data;
+  setIngresos(ingresos);
+  setEgresos(egresos);
 
-      const disponibilidad = ((ingresos - egresos) / ingresos) * 100;
-      evaluarRango(ingresos, disponibilidad);
-    } catch (error) {
-      console.error('Error al recuperar datos:', error);
-    }
-  };*/
+  const disponibilidad = ((ingresos - egresos) / ingresos) * 100;
+  evaluarRango(ingresos, disponibilidad);
+} catch (error) {
+  console.error('Error al recuperar datos:', error);
+}
+};*/
 
