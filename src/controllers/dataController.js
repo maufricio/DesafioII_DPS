@@ -155,7 +155,7 @@ exports.modifyUsuario = async(req, res) => {
 
     try {
         // Actualiza el estado del usuario en la base de datos
-        const usuarioActualizado = await datausuario.findByIdAndUpdate(
+        const usuarioActualizado = await dataIngresos.findByIdAndUpdate(
             id,
             { Status: status }, // Cambia el campo `Status` con el valor recibido
             { new: true } // Devuelve el documento actualizado
@@ -169,6 +169,9 @@ exports.modifyUsuario = async(req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Error al actualizar el estado', error });
     }
+
+
+
 }
 
 //CRUD para la solicitud
