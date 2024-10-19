@@ -1,0 +1,1 @@
+export default "https://api-banco-ssrm.onrender.com/api"

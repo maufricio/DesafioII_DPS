@@ -9,34 +9,28 @@ const Drawer = createDrawerNavigator();
 
 const Datos = () => {
 
-  const [updateGraphData, setUpdateGraphData] = useState(() => () => { }); // se inicializa como una función vacía normal, almancenará una función
-
-  const handleDataChange = (updateFunction) => {
-    setUpdateGraphData(() => updateFunction);
-  };
-
   return (
     <Drawer.Navigator initialRouteName="Ingresos">
       <Drawer.Screen name="Ingresos" options={{
-          drawerIcon: ({ color, size }) => (
-            <Icon name="attach-money" size={size} color={color} />
-          ),
-        }}>
-        {() => <Ingresos update={handleDataChange} />}
+        drawerIcon: ({ color, size }) => (
+          <Icon name="attach-money" size={size} color={color} />
+        ),
+      }}>
+        {() => <Ingresos />}
       </Drawer.Screen>
       <Drawer.Screen name="Egresos" options={{
-          drawerIcon: ({ color, size }) => (
-            <Icon name="currency-exchange" size={size} color={color} />
-          ),
-        }}>
-        {()=> <Egresos update={handleDataChange}></Egresos>}
+        drawerIcon: ({ color, size }) => (
+          <Icon name="currency-exchange" size={size} color={color} />
+        ),
+      }}>
+        {() => <Egresos />}
       </Drawer.Screen>
       <Drawer.Screen name="Graficas" options={{
-          drawerIcon: ({ color, size }) => (
-            <Icon name="signal-cellular-alt" size={size} color={color} />
-          ),
-        }}>
-        {() => <Grafica onDataChange={updateGraphData} />}
+        drawerIcon: ({ color, size }) => (
+          <Icon name="signal-cellular-alt" size={size} color={color} />
+        ),
+      }}>
+        {() => <Grafica />}
       </Drawer.Screen>
     </Drawer.Navigator>
   );

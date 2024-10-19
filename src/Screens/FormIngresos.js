@@ -2,21 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableWithoutFeedback, Keyboard, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-import { v4 as uuidv4 } from 'uuid';
 import 'react-native-get-random-values';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Data from "../Conection/Data"
 
+const url_list = Data + '/listingreso'
+const url_add = Data + '/addingreso'
+const url_delete = Data + '/deleteingreso'
 
 const validationSchema = Yup.object().shape({
-  fuenteIngreso: Yup.string()
+  Tipo_ingreso: Yup.string()
     .oneOf(
       ['Salario', 'Negocio Propio', 'Pensiones', 'Remesas', 'Ingresos Varios'],
       'Por favor selecciona una opción válida.'
     )
     .required('Por favor selecciona una opción válida de los ingresos.'),
-  monto: Yup.number()
+  Monto: Yup.number()
     .required('El monto es obligatorio')
     .min(0.01, 'El monto debe ser mayor a 0')
 });
@@ -24,77 +26,58 @@ const validationSchema = Yup.object().shape({
 const cerrarTeclado = () => {
   Keyboard.dismiss();
 }
-const clearStorage = async () => {
-  try {
-    await AsyncStorage.clear();
-    console.log("AsyncStorage borrado");
-  } catch (error) {
-    console.error('Error al limpiar datos:', error);
-  }
-}
 
-
-
-export default function FormIngresos({ update }) {
+export default function FormIngresos() {
   const [ingresos, setIngresos] = useState([]);
 
-  //console.log(cita);
+  //funcion para listar los datos
+  const getData = async () => {
+    try {
+      const response = await fetch(url_list);
+      const data = await response.json();
+      setIngresos(data);
+      console.log("Ingresos recuperados:", data);
+    } catch (error) {
+      console.error('Error al recuperar datos:', error);
+    }
+  }
 
   // Función para almacenar los datos
   const storeData = async (newIngreso) => {
     try {
-      newIngreso.id = uuidv4()
-      const storedIngresos = await AsyncStorage.getItem('ingresos');
-      const ingresosArray = storedIngresos ? JSON.parse(storedIngresos) : [];
-      const updatedIngresos = [...ingresosArray, newIngreso];
+      const response = await fetch(url_add, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newIngreso),
+      });
 
-      // Guardar en AsyncStorage
-      await AsyncStorage.setItem('ingresos', JSON.stringify(updatedIngresos));
+      if (!response.ok) throw new Error('Error al agregar ingreso');
 
-      // Actualizar el estado local
-      setIngresos(updatedIngresos);
-      update(() => retrieveData());
+      const addedIngreso = await response.json();
+      setIngresos((prevIngresos) => [...prevIngresos, addedIngreso]);
+      getData()
     } catch (error) {
       console.error('Error al almacenar datos:', error);
     }
   };
 
-  const deleteData = async (id) => {
+  const deleteData = async (_id) => {
     try {
-      const storedIngresos = await AsyncStorage.getItem('ingresos');
-      const ingresosArray = storedIngresos ? JSON.parse(storedIngresos) : []; //Si existe algo dentro de storedIngresos, entonces parsear a JSON lo cual es un array, si no, entonces es un array vacío
-      const updatedIngresos = ingresosArray.filter((ingreso) => ingreso.id !== id);
+      const response = await fetch(`${url_delete}/${_id}`, { method: 'DELETE' });
 
-      // Guardar en AsyncStorage
-      await AsyncStorage.setItem('ingresos', JSON.stringify(updatedIngresos));
+      if (!response.ok) throw new Error('Error al eliminar ingreso');
 
-      // Actualizar el estado local
-      setIngresos(updatedIngresos);
-      update(() => retrieveData());
+      setIngresos((prevIngresos) => prevIngresos.filter((ingreso) => ingreso._id !== _id));
+      getData();
     } catch (error) {
       console.error('Error al modificar datos:', error);
     }
-  }
+  };
 
   // Para mostrar los datos almacenados
   useEffect(() => {
-    const retrieveData = async () => {
-      try {
-        const storedIngresos = await AsyncStorage.getItem('ingresos');
-        if (storedIngresos) {
-          setIngresos(JSON.parse(storedIngresos))
-          console.log("Ingresos recuperados:", JSON.parse(storedIngresos));
-        }
-
-      } catch (error) {
-        console.error('Error al recuperar datos:', error);
-      }
-    };
-
-    retrieveData(); // Al montar el componente, obtener los datos
+    getData(); // Al montar el componente, obtener los datos
   }, []);
-
-
 
   return (
     <>
@@ -106,11 +89,11 @@ export default function FormIngresos({ update }) {
           </View>
           <Formik
             initialValues={{
-              fuenteIngreso: '',
-              monto: ''
+              Tipo_ingreso: '',
+              Monto: ''
             }}
             validationSchema={validationSchema}
-            onSubmit={(values, {resetForm}) => {
+            onSubmit={(values, { resetForm }) => {
               console.log(values); // Imprime los valores en formato JavaScript
               storeData(values);
               resetForm();
@@ -123,8 +106,8 @@ export default function FormIngresos({ update }) {
                   <Text style={{ fontSize: 15 }}>Tipo de Ingreso</Text>
                 </View>
                 <Picker
-                  selectedValue={values.fuenteIngreso}
-                  onValueChange={(itemValue) => setFieldValue('fuenteIngreso', itemValue)}
+                  selectedValue={values.Tipo_ingreso}
+                  onValueChange={(itemValue) => setFieldValue('Tipo_ingreso', itemValue)}
                   style={styles.picker}
                 >
                   <Picker.Item label="Selecciona un tipo de ingreso" value="" />
@@ -134,7 +117,7 @@ export default function FormIngresos({ update }) {
                   <Picker.Item label="Remesas" value="Remesas" />
                   <Picker.Item label="Ingresos Varios" value="Ingresos Varios" />
                 </Picker>
-                <ErrorMessage name="tipoIngreso" component={Text} style={styles.error} />
+                <ErrorMessage name="Tipo_ingreso" component={Text} style={styles.error} />
                 <View style={styles.formGroup}>
                   <View style={styles.header}>
                     <Icon name="attach-money" size={20} color="black" style={styles.icon} />
@@ -143,10 +126,10 @@ export default function FormIngresos({ update }) {
 
                   {/* Campo para el monto */}
                   <TextInput
-                    name="monto"  // Agrega el atributo name
-                    value={values.monto}
-                    onChangeText={handleChange('monto')}  // Asegura que esté enlazado correctamente
-                    onBlur={handleBlur('monto')}
+                    name="Monto"  // Agrega el atributo name
+                    value={values.Monto}
+                    onChangeText={handleChange('Monto')}  // Asegura que esté enlazado correctamente
+                    onBlur={handleBlur('Monto')}
                     keyboardType="numeric"
                     style={styles.input}
                     placeholder="Ingrese monto"
@@ -171,15 +154,14 @@ export default function FormIngresos({ update }) {
                 data={ingresos}
                 renderItem={({ item }) => (
                   <View style={styles.containerIngresos}>
-                    <Text style={styles.text}>{item.fuenteIngreso}</Text>
-                    <Text style={styles.text}>${item.monto}</Text>
-                    <TouchableOpacity style={styles.buttonDelete} onPress={() => deleteData(item.id)}>
+                    <Text style={styles.text}>{item.Tipo_ingreso}</Text>
+                    <Text style={styles.text}>${item.Monto}</Text>
+                    <TouchableOpacity style={styles.buttonDelete} onPress={() => deleteData(item._id)}>
                       <Icon name="delete" size={15} color="black" style={styles.icon} />
                       <Text style={styles.buttonTextDelete}>Eliminar</Text>
                     </TouchableOpacity>
                   </View>
                 )}
-                keyExtractor={(item) => item.id.toString()} // Assuming each item has a unique 'id' property
               />
 
             ) : (
