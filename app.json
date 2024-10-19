@@ -17,9 +17,20 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icono.jpeg",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "recordAudioAndroid": true
       }
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": "true"
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

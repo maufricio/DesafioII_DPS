@@ -1,64 +1,43 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Image } from 'react-native';
+import { View, TextInput, Button, Text, StyleSheet, Image, Alert } from 'react-native';
 import { Camera } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
+import CameraComponent from './CameraComponent';
+import CameraCarnet from './CameraCarnet';
+
 
 export default function Formulario() {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [selfieUri, setSelfieUri] = useState(null);
-  const [carnetUri, setCarnetUri] = useState(null);
-  const [selfieBase64, setSelfieBase64] = useState(null);
-  const [carnetBase64, setCarnetBase64] = useState(null);
   const [detalleProducto, setDetalleProducto] = useState('');
   const [nombreCompleto, setNombreCompleto] = useState('');
   const [direccion, setDireccion] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [idNotificacion, setIdNotificacion] = useState('');
+  const [selfiePhoto, setSelfiePhoto] = useState();
+  const [carnetPhoto, setCarnetPhoto] = useState();
 
-  const getCameraPermissions = async () => {
-    const { status } = await Camera.requestCameraPermissionsAsync();
-    const mediaLibraryStatus = await MediaLibrary.requestPermissionsAsync();
-    setHasPermission(status === 'granted' && mediaLibraryStatus.status === 'granted');
-  };
-
-  const takeSelfie = async () => {
-    if (hasPermission) {
-      const cameraRef = await Camera.takePictureAsync();
-      setSelfieUri(cameraRef.uri);
-      const base64Selfie = await FileSystem.readAsStringAsync(cameraRef.uri, { encoding: 'base64' });
-      setSelfieBase64(base64Selfie);
-    }
-  };
-
-  const takeCarnet = async () => {
-    if (hasPermission) {
-      const cameraRef = await Camera.takePictureAsync();
-      setCarnetUri(cameraRef.uri);
-      const base64Carnet = await FileSystem.readAsStringAsync(cameraRef.uri, { encoding: 'base64' });
-      setCarnetBase64(base64Carnet);
-    }
-  };
+  
 
   const handleSubmit = async () => {
     try {
       const formData = {
-        detalleProducto,
-        nombreCompleto,
-        direccion,
-        telefono,
-        idNotificacion,
-        selfie: selfieBase64,
-        carnet: carnetBase64,
-      };
-
-      const response = await axios.post('https://api.tu-servidor.com/formulario', formData);
+        Nombre_producto: detalleProducto,
+        Nombre_usuario: nombreCompleto,
+        Direccion: direccion,
+        Telefono: telefono,
+        Foto_rostro: null,
+        Foto_carnet: null,
+        status: false,
+      };  
+      const response = await axios.post('https://api-banco-ssrm.onrender.com/api/addusuario', formData);
       console.log('Datos enviados correctamente', response.data);
+      Alert.alert("Datos enviados correctamente");
     } catch (error) {
       console.error('Error al enviar los datos', error);
     }
   };
+
+
 
   return (
     <View style={styles.container}>
@@ -87,18 +66,14 @@ export default function Formulario() {
         keyboardType="numeric"
         style={styles.input}
       />
-      <TextInput
-        placeholder="ID Notificación"
-        value={idNotificacion}
-        onChangeText={setIdNotificacion}
-        style={styles.input}
-      />
+  <Text>Tomar foto selfie de mí</Text>
+  <CameraComponent photo={selfiePhoto} setPhoto={setSelfiePhoto} />
+    
+     
 
-      <Button title="Tomar Selfie" onPress={takeSelfie} />
-      {selfieUri && <Image source={{ uri: selfieUri }} style={styles.image} />}
-      
-      <Button title="Tomar Foto del Carnet" onPress={takeCarnet} />
-      {carnetUri && <Image source={{ uri: carnetUri }} style={styles.image} />}
+  <Text>Tomar foto de mi carnet</Text>
+  <CameraCarnet photo={carnetPhoto} setPhoto={setCarnetPhoto}/>
+
 
       <Button title="Enviar Datos" onPress={handleSubmit} />
     </View>
