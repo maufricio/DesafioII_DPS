@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 export default function Productos() {
@@ -12,8 +12,8 @@ export default function Productos() {
   // Simular obtener datos desde la API
   const retrieveData = async () => {
     // Aquí iría el fetch de Axios para traer los datos de la API en vez de AsyncStorage
-    const totalIngresos = 1000; // Simulación de ingresos
-    const totalEgresos = 500;   // Simulación de egresos
+    const totalIngresos = 100; // Simulación de ingresos
+    const totalEgresos = 200;   // Simulación de egresos
     const disponibilidad = ((totalIngresos - totalEgresos) / totalIngresos) * 100;
 
     setIngresos(totalIngresos);
@@ -105,11 +105,17 @@ const getTextColor = (producto) => {
 };
 
 return (
-  <View style={styles.container}>
-    <Text>Total Ingresos: {ingresos}</Text>
-    <Text>Total Egresos: {egresos}</Text>
-    <Text>Calificación de Riesgo: {calificacion}</Text>
-    <Text>Productos sugeridos:</Text>
+  <>
+  
+  {productos ? (
+
+<View style={styles.container}>
+<Text>Total Ingresos: {ingresos}</Text>
+<Text>Total Egresos: {egresos}</Text>
+<Text>Calificación de Riesgo: {calificacion}</Text>
+<Text>Productos sugeridos:</Text>
+
+<ScrollView>
     {productos.map((producto, index) => (
       <TouchableOpacity
         key={index}
@@ -128,7 +134,17 @@ return (
         </Text>
       </TouchableOpacity>
     ))}
-  </View>
+    </ScrollView>
+    </View>
+  ): (
+    <View>
+      <Text>No tienes productos por el momento</Text>
+    </View>
+  )}
+  
+ 
+
+  </>
 );
 
 }

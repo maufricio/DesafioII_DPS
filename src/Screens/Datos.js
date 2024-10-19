@@ -9,12 +9,11 @@ const Drawer = createDrawerNavigator();
 
 const Datos = () => {
 
-  const [updateGraphData, setUpdateGraphData] = useState(() => () => { });
+  const [updateGraphData, setUpdateGraphData] = useState(() => () => { }); // se inicializa como una función vacía normal, almancenará una función
 
   const handleDataChange = (updateFunction) => {
     setUpdateGraphData(() => updateFunction);
   };
-
 
   return (
     <Drawer.Navigator initialRouteName="Ingresos">
