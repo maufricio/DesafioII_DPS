@@ -9,6 +9,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import * as SplashScreen from 'expo-splash-screen';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Map from './src/Screens/Map';
+import Estado_productos from './src/Screens/Estado_productos'
 
 SplashScreen.preventAutoHideAsync();
 
@@ -65,6 +66,17 @@ const App = () => {
             headerShown: false,
             tabBarIcon: ({ color, size }) => (
               <Icon name="payment" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Estado_productos"
+          component={Estado_productos}  // Usamos el stack de productos
+          options={{
+            title: 'Tus productos',
+            headerShown: false,
+            tabBarIcon: ({ color, size }) => (
+              <Icon name="redeem" size={size} color={color} />
             ),
           }}
         />
