@@ -32,6 +32,7 @@ router.delete('/api/deleteegreso/:id', dataController.deleteegreso)
 router.get('/api/listusuario', dataController.listusuario)
 
 router.post('/api/addusuario', dataController.addusuario)
+router.put('/api/modifyUsuario/:id', dataController.modifyUsuario)
 
 //endopints para solicitud
 
