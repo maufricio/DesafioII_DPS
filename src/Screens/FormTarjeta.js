@@ -6,6 +6,7 @@ import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
 import CameraComponent from './CameraComponent';
 import CameraCarnet from './CameraCarnet';
+import Data from '../Conection/Data';
 
 
 export default function Formulario() {
@@ -17,19 +18,17 @@ export default function Formulario() {
   const [carnetPhoto, setCarnetPhoto] = useState();
 
   
-
   const handleSubmit = async () => {
     try {
-      const formData = {
+      const response = await axios.post('https://api-banco-ssrm.onrender.com/api/addusuario', {
         Nombre_producto: detalleProducto,
-        Nombre_usuario: nombreCompleto,
         Direccion: direccion,
         Telefono: telefono,
-        Foto_rostro: null,
-        Foto_carnet: null,
-        status: false,
-      };  
-      const response = await axios.post('https://api-banco-ssrm.onrender.com/api/addusuario', formData);
+        Foto_carnet: carnetPhoto.base64,
+      });
+
+      
+      
       console.log('Datos enviados correctamente', response.data);
       Alert.alert("Datos enviados correctamente");
     } catch (error) {
